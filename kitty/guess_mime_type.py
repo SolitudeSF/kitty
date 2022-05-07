@@ -4,6 +4,7 @@
 import os
 import stat
 from contextlib import suppress
+from xdg import Mime
 
 known_extensions = {
     'asciidoc': 'text/asciidoctor',
@@ -82,13 +83,9 @@ def guess_type(path: str, allow_filesystem_access: bool = False) -> str | None:
     is_dir = is_exe = False
 
     if allow_filesystem_access:
-        with suppress(OSError):
-            st = os.stat(path)
-            is_dir = bool(stat.S_ISDIR(st.st_mode))
-            is_exe = bool(not is_dir and st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH) and os.access(path, os.X_OK))
+        mime = Mime.get_type2(path)
+        return f"{mime.media}/{mime.subtype}"
 
-    if is_dir:
-        return 'inode/directory'
     from mimetypes import guess_type as stdlib_guess_type
 
     initialize_mime_database()
